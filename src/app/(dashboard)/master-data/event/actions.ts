@@ -11,6 +11,10 @@ const EVENT_UPLOAD_DIR = "dashboard/event";
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png"];
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 
+function baseUrl(): string {
+  return (process.env.BASE_URL || "http://localhost:3000").replace(/\/+$/, "");
+}
+
 async function requireEventAccess() {
   const session = await requireAuth();
   if (!hasMenuAccess(session, "event")) redirect("/dashboard");
@@ -44,13 +48,24 @@ async function handleUpload(
   const dir = path.join(process.cwd(), "public", EVENT_UPLOAD_DIR);
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, filename), Buffer.from(await file.arrayBuffer()));
-  return { url: `/${EVENT_UPLOAD_DIR}/${filename}`, error: null };
+  return { url: `${baseUrl()}/api/event/gambar/${filename}`, error: null };
 }
 
 async function removeUploaded(gambar: string) {
-  if (!gambar.startsWith(`/${EVENT_UPLOAD_DIR}/`)) return;
+  if (!gambar) return;
+  // Format baru: https://host/api/event/gambar/<file>
+  const newMatch = gambar.match(/\/api\/event\/gambar\/([\w.-]+)$/);
+  if (newMatch) {
+    try {
+      await unlink(path.join(process.cwd(), "public", EVENT_UPLOAD_DIR, newMatch[1]));
+    } catch {}
+    return;
+  }
+  // Format lama: https://host/dashboard/event/<file>
+  const oldMatch = gambar.match(/\/(?:dashboard\/event)\/([\w.-]+)$/);
+  if (!oldMatch) return;
   try {
-    await unlink(path.join(process.cwd(), "public", gambar.replace(/^\//, "")));
+    await unlink(path.join(process.cwd(), "public", "dashboard", "event", oldMatch[1]));
   } catch {}
 }
 
