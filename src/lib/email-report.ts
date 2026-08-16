@@ -308,7 +308,7 @@ export async function sendEmailReport(
   }
 
   try {
-    const conn = await openConnection(SMTP_HOST, port);
+    let conn: Stream = await openConnection(SMTP_HOST, port);
     const sentTo: string[] = [];
 
     // Greeting
@@ -325,7 +325,8 @@ export async function sendEmailReport(
       const starttlsResp = await readLine(conn);
       push(`STARTTLS: ${starttlsResp.trim()}`);
       if (starttlsResp.startsWith("220")) {
-        await upgradeTls(conn, SMTP_HOST);
+        conn = await upgradeTls(conn, SMTP_HOST);
+        push("TLS aktif, EHLO ulang...");
         await sendLine(conn, `EHLO localhost.localdomain`);
         await drainMultiline(conn);
       }
@@ -378,7 +379,7 @@ export async function sendEmailReport(
         `--${boundary}--`,
       ].join("\r\n");
 
-      await sendRaw(conn, `${headers}\r\n\r\n${body}\r\n.\r\n`);
+      await sendRaw(conn, `${headers}\r\n\r\n${dotStuff(body)}\r\n.\r\n`);
       const sendResp = await readLine(conn);
       if (sendResp.startsWith("250")) {
         push(`Sent to ${to}: ${sendResp.trim()}`);
@@ -400,7 +401,7 @@ export async function sendEmailReport(
 
 /* --------------------------- SMTP helpers (raw) --------------------------- */
 
-type Stream = net.Socket;
+type Stream = net.Socket | tls.TLSSocket;
 
 function probeConnect(port: number, timeoutMs: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -433,11 +434,12 @@ function openConnection(host: string, port: number): Promise<Stream> {
   });
 }
 
-function upgradeTls(conn: Stream, host: string): Promise<void> {
+function upgradeTls(conn: net.Socket, host: string): Promise<tls.TLSSocket> {
   return new Promise((resolve, reject) => {
-    const tlsSocket = tls.connect({ socket: conn, servername: host }, () => resolve());
+    conn.on("error", () => {}); // cegah unhandled 'error' pada socket lama setelah di-wrap TLS
+    const tlsSocket = tls.connect({ socket: conn, servername: host }, () => resolve(tlsSocket));
     tlsSocket.on("error", reject);
-    void tlsSocket; // conn diganti by-reference socket dari tls.connect
+    tlsSocket.setTimeout(15_000, () => reject(new Error("TLS handshake timeout")));
   });
 }
 
@@ -451,15 +453,16 @@ function sendRaw(conn: Stream, data: string): Promise<void> {
   });
 }
 
-function readLine(conn: Stream): Promise<string> {
+function readLine(conn: Stream, timeoutMs = 15_000): Promise<string> {
   return new Promise((resolve, reject) => {
     let buffer = "";
+    let timer: NodeJS.Timeout | null = null;
     const onData = (chunk: Buffer) => {
       buffer += chunk.toString("utf8");
       if (buffer.includes("\n")) {
         cleanup();
         const [line] = buffer.split("\n");
-        resolve(line);
+        resolve(line.replace(/\r$/, ""));
       }
     };
     const onErr = (e: Error) => {
@@ -467,29 +470,47 @@ function readLine(conn: Stream): Promise<string> {
       reject(e);
     };
     const cleanup = () => {
+      if (timer) clearTimeout(timer);
       conn.removeListener("data", onData);
       conn.removeListener("error", onErr);
     };
+    timer = setTimeout(() => {
+      cleanup();
+      reject(new Error("SMTP read timeout"));
+    }, timeoutMs);
     conn.on("data", onData);
     conn.on("error", onErr);
   });
 }
 
 /** Baca respons multiline EHLO (beberapa baris 250-...). */
-function drainMultiline(conn: Stream): Promise<void> {
-  return new Promise((resolve) => {
+function drainMultiline(conn: Stream, timeoutMs = 15_000): Promise<void> {
+  return new Promise((resolve, reject) => {
     let buffer = "";
+    let timer: NodeJS.Timeout | null = null;
     const onData = (chunk: Buffer) => {
       buffer += chunk.toString("utf8");
       // Multiline selesai ketika baris terakhir diawali "250 " (dengan spasi).
-      if (/(^|\r?\n)250 /m.test(buffer) || /(^|\r?\n)220 /m.test(buffer) || !buffer.includes("\n")) {
-        if (buffer.includes("\n")) {
-          conn.removeListener("data", onData);
-          resolve();
-        }
+      if (/(^|\r?\n)250 /m.test(buffer) || /(^|\r?\n)220 /m.test(buffer)) {
+        cleanup();
+        resolve();
       }
     };
+    const onErr = (e: Error) => {
+      cleanup();
+      reject(e);
+    };
+    const cleanup = () => {
+      if (timer) clearTimeout(timer);
+      conn.removeListener("data", onData);
+      conn.removeListener("error", onErr);
+    };
+    timer = setTimeout(() => {
+      cleanup();
+      reject(new Error("SMTP multiline read timeout"));
+    }, timeoutMs);
     conn.on("data", onData);
+    conn.on("error", onErr);
   });
 }
 
@@ -499,6 +520,11 @@ function stripHtml(html: string): string {
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/** Dot-stuffing: baris yang diawali "." harus digandakan agar tidak dianggap terminator DATA. */
+function dotStuff(text: string): string {
+  return text.replace(/^\./gm, "..");
 }
 
 /** Ambil statistik untuk preview (dipakai halaman dashboard). */
