@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { destroySession } from "@/lib/auth";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   await destroySession();
-  // Redirect ke /login pada origin yang sama (jangan pakai BASE_URL hardcoded
-  // yang bisa salah host/port di dev).
-  return NextResponse.redirect(new URL("/login", request.url));
+  // Redirect relatif — browser menyesuaikan dengan origin halaman sekarang,
+  // jadi tidak mengarah ke localhost saat di belakang reverse proxy.
+  return NextResponse.redirect("/login");
 }
