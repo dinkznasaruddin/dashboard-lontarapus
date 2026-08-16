@@ -43,7 +43,8 @@ export function Topbar({
           onClick={() => {
             document.cookie =
               "lontara_session=; path=/; max-age=0; samesite=lax; secure";
-            window.location.href = "/login";
+            document.cookie = "lontara_session=; path=/; max-age=0;";
+            window.location.href = "/api/auth/logout";
           }}
           className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
         >
