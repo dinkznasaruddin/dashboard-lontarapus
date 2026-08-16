@@ -16,3 +16,10 @@ body {
   color: var(--foreground);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
+
+/* Perkecil badge reCAPTCHA v3 agar tetap terlihat (tidak menutupi konten) */
+.grecaptcha-badge {
+  zoom: 0.75;
+  visibility: visible !important;
+  opacity: 1 !important;
+}

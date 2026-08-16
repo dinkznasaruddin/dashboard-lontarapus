@@ -322,7 +322,10 @@ export default async function AkunPage({
                               <Eye className="h-3.5 w-3.5" />
                               Lihat menu
                             </summary>
-                            <div className="mt-1 max-w-xs rounded-md border border-slate-100 bg-slate-50 px-2 py-1.5 text-xs text-slate-600">
+                            <div
+                              className="mt-1 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap rounded-md border border-slate-100 bg-slate-50 px-2 py-1.5 text-xs text-slate-600"
+                              title={menuArray.join(", ")}
+                            >
                               {menuArray.join(", ")}
                             </div>
                           </details>

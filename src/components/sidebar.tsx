@@ -18,6 +18,8 @@ import {
   ChevronDown,
   PanelLeftClose,
   PanelLeftOpen,
+  Headset,
+  MessageCircle,
   type LucideIcon,
 } from "lucide-react";
 import type { MenuGroup } from "@/lib/menu";
@@ -180,6 +182,27 @@ export function Sidebar({
       </nav>
 
       <div className="shrink-0 border-t border-slate-100 p-3">
+        {!collapsed && (
+          <div className="mb-3 rounded-xl border border-blue-100 bg-blue-50/70 p-3">
+            <div className="flex items-center gap-1.5">
+              <Headset className="h-4 w-4 text-blue-600" />
+              <p className="text-xs font-semibold text-slate-800">Perlu Bantuan?</p>
+            </div>
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
+              Jika Anda mengalami kendala saat menggunakan aplikasi, silakan hubungi
+              tim teknis kami:
+            </p>
+            <a
+              href="https://wa.me/6281241856501"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg bg-[#25D366] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#1fb457]"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+              Hubungi kami
+            </a>
+          </div>
+        )}
         <div className={cn("flex items-center", collapsed ? "flex-col gap-2" : "justify-between gap-2")}>
           {!collapsed && (
             <p className="truncate px-1 text-xs text-slate-500">

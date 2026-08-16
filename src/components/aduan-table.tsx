@@ -342,8 +342,6 @@ export function AduanTable({
                 <div>
                   <h4 className="mb-3 border-b border-slate-100 pb-2 text-sm font-bold text-blue-600">Informasi Pelapor</h4>
                   <dl className="space-y-1.5 text-sm">
-                    <Row k="Nama" v={detail.a.nama_pelapor || "-"} />
-                    <Row k="No. HP" v={detail.a.no_hp || "-"} />
                     <Row k="Kecamatan" v={detail.a.kecamatan || "-"} />
                     <Row k="Kelurahan" v={detail.a.kelurahan || "-"} />
                     <Row k="Alamat" v={detail.a.alamat || "-"} />

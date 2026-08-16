@@ -24,7 +24,7 @@ export function Topbar({
         </button>
         <span className="h-2 w-2 rounded-full bg-emerald-500" />
         <span className="text-sm font-medium text-slate-500">
-          Dashboard Superapps Makassar
+          Dashboard Makassar Superapps
         </span>
       </div>
 
@@ -41,9 +41,6 @@ export function Topbar({
         <button
           type="button"
           onClick={() => {
-            document.cookie =
-              "lontara_session=; path=/; max-age=0; samesite=lax; secure";
-            document.cookie = "lontara_session=; path=/; max-age=0;";
             window.location.href = "/api/auth/logout";
           }}
           className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"

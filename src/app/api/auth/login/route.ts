@@ -11,18 +11,58 @@ interface UserRow {
   menu_access: string | null;
 }
 
+/** Verifikasi token Google reCAPTCHA v3 di sisi server. */
+async function verifyRecaptcha(token: string | null): Promise<boolean> {
+  const secret = process.env.RECAPTCHA_SECRET_KEY;
+  if (!secret) return true; // bila secret belum dikonfigurasi, lewati verifikasi
+  if (!token) return false;
+
+  try {
+    const res = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ secret, response: token }),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      console.error("[reCAPTCHA] gagal:", JSON.stringify(data));
+      return false;
+    }
+    if (data.action !== "login") {
+      console.error("[reCAPTCHA] action mismatch:", data.action);
+      return false;
+    }
+    if ((data.score ?? 0) < 0.5) {
+      console.error("[reCAPTCHA] skor terlalu rendah:", data.score);
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(request: NextRequest) {
-  let username: string, password: string;
+  let username: string, password: string, recaptchaToken: string | null;
   try {
     const body = await request.json();
     username = String(body.username ?? "").trim();
     password = String(body.password ?? "");
+    recaptchaToken = body.recaptchaToken ? String(body.recaptchaToken) : null;
   } catch {
     return NextResponse.json({ error: "Data tidak valid" }, { status: 400 });
   }
 
   if (!username || !password) {
     return NextResponse.json({ error: "Username dan password wajib diisi" }, { status: 400 });
+  }
+
+  const recaptchaOk = await verifyRecaptcha(recaptchaToken);
+  if (!recaptchaOk) {
+    return NextResponse.json(
+      { error: "Verifikasi reCAPTCHA gagal. Silakan coba lagi." },
+      { status: 403 }
+    );
   }
 
   const user = await queryOne<UserRow>(

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Eye, EyeOff, Loader2, Lock, ShieldAlert, User } from "lucide-react";
+
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? "";
 
 function LoginForm() {
   const router = useRouter();
@@ -12,15 +14,74 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (!RECAPTCHA_SITE_KEY) return;
+    if (document.getElementById("grecaptcha-v3") || window.grecaptcha) return;
+    const s = document.createElement("script");
+    s.id = "grecaptcha-v3";
+    s.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`;
+    s.async = true;
+    s.onload = () => setRecaptchaReady(true);
+    s.onerror = () => setRecaptchaReady(false);
+    document.head.appendChild(s);
+  }, []);
+
+  const [recaptchaReady, setRecaptchaReady] = useState<boolean | null>(null);
+
+  async function getRecaptchaToken(): Promise<string | null> {
+    if (!RECAPTCHA_SITE_KEY || typeof window === "undefined") return null;
+
+    // Tunggu script reCAPTCHA termuat (max 8 detik)
+    if (!window.grecaptcha) {
+      await new Promise<void>((resolve) => {
+        const start = Date.now();
+        const poll = () => {
+          if (window.grecaptcha || Date.now() - start > 8000) return resolve();
+          setTimeout(poll, 100);
+        };
+        poll();
+      });
+    }
+
+    if (!window.grecaptcha) return null;
+
+    try {
+      const token = await new Promise<string>((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("timeout")), 10000);
+        window.grecaptcha!.ready(async () => {
+          try {
+            const t = await window.grecaptcha!.execute(RECAPTCHA_SITE_KEY, {
+              action: "login",
+            });
+            clearTimeout(timer);
+            resolve(t);
+          } catch (e) {
+            clearTimeout(timer);
+            reject(e);
+          }
+        });
+      });
+      return token;
+    } catch {
+      return null;
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
+      const recaptchaToken = await getRecaptchaToken();
+      if (!recaptchaToken) {
+        setError("Gagal memuat verifikasi keamanan. Muat ulang halaman dan coba lagi.");
+        setLoading(false);
+        return;
+      }
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, recaptchaToken }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -28,7 +89,7 @@ function LoginForm() {
         setLoading(false);
         return;
       }
-      if (data.token) {
+      if (data.token && window.location.protocol === "https:") {
         document.cookie =
           "lontara_session=" +
           data.token +
@@ -94,6 +155,13 @@ function LoginForm() {
         <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           <ShieldAlert className="h-4 w-4 shrink-0" />
           {error}
+        </div>
+      ) : null}
+
+      {recaptchaReady === false ? (
+        <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          <ShieldAlert className="h-4 w-4 shrink-0" />
+          Verifikasi keamanan gagal dimuat. Periksa koneksi internet lalu muat ulang halaman.
         </div>
       ) : null}
 

@@ -1,5 +1,7 @@
 import type { LucideIcon } from "lucide-react";
-import { ArrowDown, ArrowUp, Minus } from "lucide-react";
+import Link from "next/link";
+import { ArrowDown, ArrowRight, ArrowUp, Minus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /** Persentase perubahan — padanan formatPercentageChange() di index.php lama. */
 export function PercentChange({
@@ -51,6 +53,8 @@ export function SummaryCard({
   change,
   icon: Icon,
   color,
+  href,
+  className,
 }: {
   label: string;
   value: React.ReactNode;
@@ -58,12 +62,11 @@ export function SummaryCard({
   change: React.ReactNode;
   icon: LucideIcon;
   color: string;
+  href?: string;
+  className?: string;
 }) {
-  return (
-    <div
-      className="h-full rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
-      style={{ borderLeft: `4px solid ${color}` }}
-    >
+  const body = (
+    <>
       <div className="flex items-center">
         <div className="min-w-0 flex-1">
           <div className="text-xs font-bold uppercase tracking-wide" style={{ color }}>
@@ -77,6 +80,37 @@ export function SummaryCard({
         </div>
         <Icon className="h-7 w-7 shrink-0 text-gray-300" />
       </div>
+      {href ? (
+        <div
+          className="mt-3 flex items-center gap-1 border-t border-slate-100 pt-2 text-xs font-semibold"
+          style={{ color }}
+        >
+          Selengkapnya
+          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+        </div>
+      ) : null}
+    </>
+  );
+
+  const cls = cn(
+    "group h-full rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition",
+    href && "hover:shadow-md",
+    className
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className={cn("block h-full rounded-lg", className?.includes("hover:border") && "")} title={`Lihat detail ${label}`}>
+        <div className={cls} style={{ borderLeft: `4px solid ${color}` }}>
+          {body}
+        </div>
+      </Link>
+    );
+  }
+
+  return (
+    <div className={cls} style={{ borderLeft: `4px solid ${color}` }}>
+      {body}
     </div>
   );
 }

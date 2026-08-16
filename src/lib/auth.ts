@@ -26,17 +26,22 @@ export async function createSession(user: SessionUser): Promise<string> {
     .sign(getSecret());
 }
 
-/** Read + verify the session from cookies. */
-export async function getSession(): Promise<SessionUser | null> {
-  const store = await cookies();
-  const token = store.get(SESSION_COOKIE)?.value;
-  if (!token) return null;
+/** Verify a raw session token string. Returns the session, or null if invalid/expired. */
+export async function verifySessionToken(token: string): Promise<SessionUser | null> {
   try {
     const { payload } = await jwtVerify(token, getSecret());
     return payload as unknown as SessionUser;
   } catch {
     return null;
   }
+}
+
+/** Read + verify the session from cookies. */
+export async function getSession(): Promise<SessionUser | null> {
+  const store = await cookies();
+  const token = store.get(SESSION_COOKIE)?.value;
+  if (!token) return null;
+  return verifySessionToken(token);
 }
 
 /** True if the current request arrived over HTTPS (respects nginx X-Forwarded-Proto). */

@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { destroySession } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   await destroySession();
-  const url = new URL("/login", process.env.BASE_URL || "http://localhost:3000");
-  return NextResponse.redirect(url);
+  // Redirect ke /login pada origin yang sama (jangan pakai BASE_URL hardcoded
+  // yang bisa salah host/port di dev).
+  return NextResponse.redirect(new URL("/login", request.url));
 }
