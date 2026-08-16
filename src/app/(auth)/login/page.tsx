@@ -28,6 +28,12 @@ function LoginForm() {
         setLoading(false);
         return;
       }
+      if (data.token) {
+        document.cookie =
+          "lontara_session=" +
+          data.token +
+          "; path=/; max-age=28800; samesite=lax; secure";
+      }
       router.push("/");
       router.refresh();
     } catch {
