@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { LogOut, Menu, User } from "lucide-react";
 
 export function Topbar({
@@ -39,17 +38,18 @@ export function Topbar({
             <User className="h-4 w-4" />
           </div>
         </div>
-        <Link
-          href="/api/auth/logout"
+        <button
+          type="button"
           onClick={() => {
             document.cookie =
               "lontara_session=; path=/; max-age=0; samesite=lax; secure";
+            window.location.href = "/login";
           }}
           className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
         >
           <LogOut className="h-4 w-4" />
           Logout
-        </Link>
+        </button>
       </div>
     </header>
   );
