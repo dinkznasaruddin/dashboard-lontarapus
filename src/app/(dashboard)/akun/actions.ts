@@ -8,7 +8,7 @@ import bcrypt from "bcryptjs";
 
 async function requireSuperadmin() {
   const session = await requireAuth();
-  if (session.role !== "superadmin") redirect("/");
+  if (session.role !== "superadmin") redirect("/dashboard");
   return session;
 }
 

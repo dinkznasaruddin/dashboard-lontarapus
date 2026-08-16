@@ -15,7 +15,7 @@ export default async function EventManagementPage({
   const session = await requireAuth();
   const cfg = MAKASSAR_MOVE_MODES.production;
   if (session.role !== "superadmin" && !cfg.accessKeys.some((k) => hasMenuAccess(session, k))) {
-    redirect("/");
+    redirect("/dashboard");
   }
 
   const sp = await searchParams;

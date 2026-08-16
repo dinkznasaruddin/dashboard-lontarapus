@@ -95,7 +95,7 @@ export default async function AkunPage({
   searchParams: Promise<{ action?: string; id?: string; jenis?: string; pesan?: string; page?: string }>;
 }) {
   const session = await requireAuth();
-  if (session.role !== "superadmin") redirect("/");
+  if (session.role !== "superadmin") redirect("/dashboard");
 
   const sp = await searchParams;
   const action = sp.action || "list";

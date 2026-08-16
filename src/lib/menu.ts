@@ -22,7 +22,7 @@ export const MENU: MenuGroup[] = [
     key: "dashboard",
     label: "Dashboard",
     icon: "tachometer",
-    items: [{ key: "dashboard", label: "Dashboard", href: "/", accessKeys: ["dashboard"] }],
+    items: [{ key: "dashboard", label: "Dashboard", href: "/dashboard", accessKeys: ["dashboard"] }],
   },
   {
     key: "master_data",

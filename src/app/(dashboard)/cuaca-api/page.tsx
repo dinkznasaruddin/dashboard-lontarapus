@@ -76,7 +76,7 @@ function WeatherIconBmkg({
   className?: string;
 }) {
   if (!image) return <WeatherIcon desc={desc} className={className} />;
-  const src = image.replace(/\s/g, "%20");
+  const src = String(image).replace(/\s/g, "%20");
   // eslint-disable-next-line @next/next/no-img-element
   return <img src={src} alt={desc || "cuaca"} className={className} loading="lazy" />;
 }

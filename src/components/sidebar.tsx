@@ -67,7 +67,7 @@ export function Sidebar({
       )}
     >
       <Link
-        href="/"
+        href="/dashboard"
         className="flex h-16 shrink-0 items-center justify-center border-b border-slate-100 px-3"
       >
         {collapsed ? (

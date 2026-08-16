@@ -17,7 +17,7 @@ async function requireModeAccess(mode: MakassarMoveMode) {
   const session = await requireAuth();
   const keys = MAKASSAR_MOVE_MODES[mode].accessKeys;
   if (session.role !== "superadmin" && !keys.some((k) => hasMenuAccess(session, k))) {
-    redirect("/");
+    redirect("/dashboard");
   }
 }
 

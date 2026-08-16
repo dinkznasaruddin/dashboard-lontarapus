@@ -60,7 +60,7 @@ export default async function EventPage({
   searchParams: Promise<{ action?: string; id?: string; jenis?: string; pesan?: string; page?: string }>;
 }) {
   const session = await requireAuth();
-  if (!hasMenuAccess(session, "event")) redirect("/");
+  if (!hasMenuAccess(session, "event")) redirect("/dashboard");
 
   const sp = await searchParams;
   const action = sp.action || "list";

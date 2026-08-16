@@ -13,7 +13,7 @@ const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 
 async function requireEventAccess() {
   const session = await requireAuth();
-  if (!hasMenuAccess(session, "event")) redirect("/");
+  if (!hasMenuAccess(session, "event")) redirect("/dashboard");
   return session;
 }
 

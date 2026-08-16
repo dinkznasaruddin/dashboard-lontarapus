@@ -15,7 +15,7 @@ export default async function StagingPage({
   const session = await requireAuth();
   const cfg = MAKASSAR_MOVE_MODES.staging;
   if (session.role !== "superadmin" && !cfg.accessKeys.some((k) => hasMenuAccess(session, k))) {
-    redirect("/");
+    redirect("/dashboard");
   }
 
   const sp = await searchParams;

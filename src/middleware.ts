@@ -6,19 +6,20 @@ const PUBLIC_PATHS = ["/login", "/api/auth/login", "/cuaca"];
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
+  const isLanding = pathname === "/";
   const hasSession = request.cookies.has(SESSION_COOKIE);
 
   // Belum login, akses halaman non-public -> redirect ke login
-  if (!isPublic && !hasSession) {
+  if (!isPublic && !isLanding && !hasSession) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Sudah login, akses /login -> arahkan ke dashboard
-  if (isPublic && pathname === "/login" && hasSession) {
+  // Sudah login, akses halaman depan / login -> arahkan ke dashboard
+  if (hasSession && (isLanding || pathname === "/login")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 
