@@ -1,5 +1,5 @@
 import { SignJWT, jwtVerify } from "jose";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 const SESSION_COOKIE = "lontara_session";
@@ -39,12 +39,20 @@ export async function getSession(): Promise<SessionUser | null> {
   }
 }
 
+/** True if the current request arrived over HTTPS (respects nginx X-Forwarded-Proto). */
+async function isHttpsRequest(): Promise<boolean> {
+  const headerStore = await headers();
+  const proto = headerStore.get("x-forwarded-proto");
+  if (proto) return proto.split(",")[0].trim() === "https";
+  return process.env.NODE_ENV === "production";
+}
+
 /** Persist session cookie. */
 export async function setSessionCookie(token: string): Promise<void> {
   const store = await cookies();
   store.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: await isHttpsRequest(),
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_MAX_AGE,
