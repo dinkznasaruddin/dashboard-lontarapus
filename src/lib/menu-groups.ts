@@ -24,6 +24,7 @@ export const MENU_GROUPS: MenuGroupDef[] = [
       { key: "makassar_move", label: "Makassar Move (Parent)" },
       { key: "event_management", label: "└─ Event Management" },
       { key: "event_management_staging", label: "└─ Event Management (Staging)" },
+      { key: "makassar_move_leaderboard", label: "└─ Leaderboard" },
     ],
   },
   {

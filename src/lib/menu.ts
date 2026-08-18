@@ -56,6 +56,12 @@ export const MENU: MenuGroup[] = [
         href: "/makassar-move/staging",
         accessKeys: ["makassar_move", "event_management_staging"],
       },
+      {
+        key: "makassar_move_leaderboard",
+        label: "Leaderboard",
+        href: "/makassar-move/leaderboard",
+        accessKeys: ["makassar_move", "event", "event_management", "event_management_staging"],
+      },
     ],
   },
   {

@@ -53,6 +53,27 @@ export interface ApiResponse {
   body: any;
 }
 
+export interface MmLeaderboardEntry {
+  rank: number;
+  user_id: string;
+  user_name: string;
+  club_name: string | null;
+  avatar_url: string | null;
+  number_participant: string;
+  total_distance_km: number;
+  distance_points: number;
+  aduan_count: number;
+  aduan_points: number;
+  total_points: number;
+  is_current_user: boolean;
+}
+
+export interface MmLeaderboard {
+  aduan_score: number;
+  distance_score: number;
+  leaderboard: MmLeaderboardEntry[];
+}
+
 /** Config per mode halaman (produksi vs staging). */
 export const MAKASSAR_MOVE_MODES = {
   production: {
@@ -117,6 +138,12 @@ export async function updateEventApi(mode: MakassarMoveMode, id: string, payload
 
 export async function deleteEventApi(mode: MakassarMoveMode, id: string): Promise<ApiResponse> {
   return callApi(mode, "DELETE", `/events/${encodeURIComponent(id)}`);
+}
+
+export async function getLeaderboard(mode: MakassarMoveMode, eventId: string): Promise<MmLeaderboard | null> {
+  const { status, body } = await callApi(mode, "GET", `/events/${encodeURIComponent(eventId)}/leaderboard`);
+  if (status !== 200 || !body || !Array.isArray(body.leaderboard)) return null;
+  return body as MmLeaderboard;
 }
 
 export const getEventsCached = unstable_cache(
